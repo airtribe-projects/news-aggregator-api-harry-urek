@@ -1,44 +1,45 @@
 const prisma = require('../prisma/prismaClient');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+
+const JWT_SECRET = process.env.JWT_SECRET
 
 
-const createUser = async (req, res) => {
-    const { name, email, password } = req.body;
-
+const createUser = async (name, email, password) => {
     try {
         const user = await prisma.user.create({
             data: { name, email, password },
-
         });
-        return res.status(201).json(user);
+        return user;
     } catch (err) {
-        return res.status(500).json({ error: 'Unable to create user' });
+        throw new Error('Unable to create user');
     }
 };
 
 
-const getUsers = async (req, res) => {
+const getUsers = async () => {
     try {
         const users = await prisma.user.findMany();
-        return res.status(200).json(users);
+        return users;
     } catch (err) {
-        return res.status(500).json({ error: 'Unable to fetch users' });
+        throw new Error('Unable to fetch users');
     }
 };
 
 
 
-const getUserById = async (req, res) => {
-    const { id } = req.params;
+const getUserById = async (id) => {
+
     try {
         const user = await prisma.user.findUnique({
             where: { id: parseInt(id) }
         });
         if (!user) {
-            return res.status(404).json({ error: `User with id ${id} not found` });
+            throw new Error(`User with id ${id} not found`);
         }
-        return res.status(200).json(user);
+        return user;
     } catch (err) {
-        return res.status(500).json({ error: 'Unable to fetch user' });
+        return err;
     }
 }
 
@@ -50,12 +51,35 @@ const deleteUser = async (req, res) => {
             where: { id: parseInt(id) }
         });
         if (!user) {
-            res.status(404).json({ error: `User with id ${id} not found` });
+            throw new Error(`User with id ${id} not found`);
         }
-        return res.status(200).json(user);
+        return user;
     } catch (err) {
-        return res.status(500).json({ error: 'Unable to delete user' });
+        return err;
     }
 }
+
+
+const loginUser = async (email, password) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { email }
+        });
+        if (!user) {
+            throw new Error("User not found");
+        }
+        const isPasswordMatch = await bcrypt.compare(password, user.password);
+        if (!isPasswordMatch) {
+            throw new Error("Invalid password");
+        }
+
+        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
+        return token;
+    }
+    catch (err) {
+        return err;
+    }
+}
+
 
 module.exports = { createUser, getUsers, getUserById, deleteUser };
