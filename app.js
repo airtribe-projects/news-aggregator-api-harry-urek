@@ -1,15 +1,17 @@
 const express = require('express');
 const { json, urlencoded } = require('body-parser');
+const userRoutes = require('./routes/userRoutes');
+const preferencesRoutes = require('./routes/preferencesRoutes');
+const { authenticateToken } = require('./middlewares/authMiddleware');
+
+
 const app = express();
 
 
 app.use([json(), urlencoded({ extended: true })]);
 
-
-
-
-
-
+app.use("/users/preferences", authenticateToken, preferencesRoutes);
+app.use("/users", userRoutes);
 
 
 module.exports = app;

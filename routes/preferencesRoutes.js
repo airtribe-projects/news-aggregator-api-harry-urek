@@ -6,8 +6,8 @@ const { authenticateToken } = require('../middlewares/authMiddleware');
 const router = express.Router();
 
 
-router.get('/', authenticateToken, async (req, res) => {
-    const userId = req.user.id;
+router.get('/', async (req, res) => {
+    const userId = req.decodedToken.id;
     const preferences = await getPreferences(userId);
     if (preferences.error) {
         return res.status(500).json({ error: preferences.error });
@@ -18,8 +18,8 @@ router.get('/', authenticateToken, async (req, res) => {
 
 
 
-router.put('/', authenticateToken, async (req, res) => {
-    const userId = req.user.id;
+router.put('/', async (req, res) => {
+    const userId = req.decodedToken.id;
     const { categories, languages } = req.body;
     if (!categories || !languages) {
         return res.status(400).json({ error: "Categories and languages are required" }); // 400 Bad Request

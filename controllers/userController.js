@@ -82,4 +82,4 @@ const loginUser = async (email, password) => {
 }
 
 
-module.exports = { createUser, getUsers, getUserById, deleteUser };
+module.exports = { createUser, getUsers, getUserById, deleteUser, loginUser };

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+require("dotenv").config();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 
@@ -12,7 +13,7 @@ const authenticateToken = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
+        req.decodedToken = decoded;
         next();
     }
     catch (err) {

@@ -23,10 +23,8 @@ model User {
 
 
 model Preferences {
-  id          Int     @id @default(autoincrement())
-  userId      Int     @unique
-  categories  String  
-  language    String
-
-  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int    @id @unique
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categories String
+  language   String
 }

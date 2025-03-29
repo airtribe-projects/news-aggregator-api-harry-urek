@@ -1,15 +1,20 @@
-const prisma = require('../db/prismaClient');
+const prisma = require('../prisma/prismaClient');
 
 
 const getPreferences = async (id) => {
     try {
+
         const preferences = await prisma.preferences.findUnique({
-            where: { userId: id },
+            where: { userId: parseInt(id) },
+            select: {
+                categories: true,
+                language: true,
+            },
         });
         if (!preferences) {
             throw new Error('Preferences not found');
         };
-        return user.preferences;
+        return preferences;
     }
     catch (error) {
         return { error: error.message };
@@ -19,11 +24,16 @@ const getPreferences = async (id) => {
 
 const updatePreferences = async (id, categories, languages) => {
     try {
-        const preferences = await prisma.preferences.update({
+        const preferences = await prisma.preferences.upsert({
             where: { userId: id },
-            data: {
+            update: {
                 categories: categories,
-                languages: languages,
+                language: languages,
+            },
+            create: {
+                userId: id,
+                categories: categories,
+                language: languages,
             },
         });
         return preferences;
