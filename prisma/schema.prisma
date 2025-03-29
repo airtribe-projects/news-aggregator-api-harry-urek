@@ -25,6 +25,6 @@ model User {
 model Preferences {
   userId    Int    @id @unique
   user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  categories String
+  categories Json
   language   String
 }

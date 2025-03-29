@@ -14,7 +14,11 @@ const getPreferences = async (id) => {
         if (!preferences) {
             throw new Error('Preferences not found');
         };
-        return preferences;
+        return {
+            userId: id,
+            categories: JSON.parse(preferences.categories), // Parse JSON string back to array
+            language: preferences.language,
+        }
     }
     catch (error) {
         return { error: error.message };
@@ -27,16 +31,20 @@ const updatePreferences = async (id, categories, languages) => {
         const preferences = await prisma.preferences.upsert({
             where: { userId: id },
             update: {
-                categories: categories,
+                categories: JSON.stringify(categories), // Store as JSON string
                 language: languages,
             },
             create: {
                 userId: id,
-                categories: categories,
+                categories: JSON.stringify(categories), // Store as JSON string
                 language: languages,
             },
         });
-        return preferences;
+        return {
+            userId: id,
+            categories: JSON.parse(preferences.categories), // Parse JSON string back to array
+            language: preferences.language,
+        };
     } catch (error) {
         return { error: error.message };
     }
