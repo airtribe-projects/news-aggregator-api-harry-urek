@@ -21,8 +21,8 @@ router.post('/signup', hashPassword, async (req, res) => {
     try {
         const user = await createUser(name, email, password);
         
-        // Create default preferences if provided
-        if (preferences) {
+        // Create default preferences if provided in the request
+        if (preferences && Array.isArray(preferences)) {
             const { updatePreferences } = require('../controllers/preferencesController');
             await updatePreferences(user.id, preferences, 'en');
         }

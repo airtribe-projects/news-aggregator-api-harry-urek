@@ -10,9 +10,6 @@ router.get('/', async (req, res) => {
     const userId = req.decodedToken.id;
     const preferences = await getPreferences(userId);
     if (preferences.error) {
-        if (preferences.error === 'Preferences not found') {
-            return res.status(404).json({ error: preferences.error });
-        }
         return res.status(500).json({ error: preferences.error });
     }
     // Return in format expected by tests
