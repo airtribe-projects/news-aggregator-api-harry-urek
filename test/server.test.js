@@ -10,7 +10,7 @@ const mockUser = {
     preferences:['movies', 'comics']
 };
 
-let token = '';
+let token = 'hbk';
 
 // Auth tests
 
