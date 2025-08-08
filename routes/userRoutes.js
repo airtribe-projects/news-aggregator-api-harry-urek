@@ -11,11 +11,24 @@ const router = express.Router();
 // router.get('/:id', getUserById);
 // router.delete('/:id', deleteUser);
 router.post('/signup', hashPassword, async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, preferences } = req.body;
+    
+    // Validate required fields
+    if (!name || !email || !password) {
+        return res.status(400).json({ error: "Name, email, and password are required" });
+    }
+    
     try {
         const user = await createUser(name, email, password);
+        
+        // Create default preferences if provided
+        if (preferences) {
+            const { updatePreferences } = require('../controllers/preferencesController');
+            await updatePreferences(user.id, preferences, 'en');
+        }
+        
         delete user.password;
-        res.status(201).json(user);
+        res.status(200).json(user);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -31,7 +44,7 @@ router.get('/', async (req, res) => {
 }
 );
 router.get('/:id', async (req, res) => {
-    const { id } = req.user.id;
+    const { id } = req.params;
     try {
         const user = await getUserById(id);
         res.status(200).json(user);
@@ -52,14 +65,19 @@ router.delete('/:id', async (req, res) => {
 );
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
+    
+    // Validate required fields
+    if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+    }
+    
     try {
         const token = await loginUser(email, password);
-
-        if (!token) {
-            return res.status(401).json({ error: 'Invalid email or password' });
-        }
         res.status(200).send({ token: token });
     } catch (err) {
+        if (err.message === "User not found" || err.message === "Invalid password") {
+            return res.status(401).json({ error: err.message });
+        }
         res.status(500).json({ error: err.message });
     }
 }

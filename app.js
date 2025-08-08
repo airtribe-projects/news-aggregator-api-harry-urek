@@ -4,6 +4,7 @@ const userRoutes = require('./routes/userRoutes');
 const newsRoutes = require('./routes/newsRoutes');
 const preferencesRoutes = require('./routes/preferencesRoutes');
 const { authenticateToken } = require('./middlewares/authMiddleware');
+const CacheUpdateService = require('./services/cacheUpdateService');
 
 
 const app = express();
@@ -15,6 +16,21 @@ app.use("/users/preferences", authenticateToken, preferencesRoutes);
 app.use("/users", userRoutes);
 app.use("/news", newsRoutes);
 
+// Start periodic cache updates
+CacheUpdateService.start();
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+    console.log('Shutting down gracefully...');
+    CacheUpdateService.stop();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    console.log('Shutting down gracefully...');
+    CacheUpdateService.stop();
+    process.exit(0);
+});
 
 module.exports = app;
 

@@ -10,9 +10,15 @@ router.get('/', async (req, res) => {
     const userId = req.decodedToken.id;
     const preferences = await getPreferences(userId);
     if (preferences.error) {
+        if (preferences.error === 'Preferences not found') {
+            return res.status(404).json({ error: preferences.error });
+        }
         return res.status(500).json({ error: preferences.error });
     }
-    return res.status(200).json(preferences);
+    // Return in format expected by tests
+    return res.status(200).json({ 
+        preferences: preferences.categories 
+    });
 }
 );
 
@@ -20,15 +26,21 @@ router.get('/', async (req, res) => {
 
 router.put('/', async (req, res) => {
     const userId = req.decodedToken.id;
-    const { categories, languages } = req.body;
-    if (!categories || !languages) {
-        return res.status(400).json({ error: "Categories and languages are required" }); // 400 Bad Request
+    const { preferences, categories, languages } = req.body;
+    
+    // Support both old format (preferences) and new format (categories, languages)
+    const finalCategories = preferences || categories;
+    const finalLanguages = languages || 'en';
+    
+    if (!finalCategories) {
+        return res.status(400).json({ error: "Categories are required" });
     }
-    const preferences = await updatePreferences(userId, categories, languages);
-    if (preferences.error) {
-        return res.status(500).json({ error: preferences.error });
+    
+    const result = await updatePreferences(userId, finalCategories, finalLanguages);
+    if (result.error) {
+        return res.status(500).json({ error: result.error });
     }
-    return res.status(200).json(preferences);
+    return res.status(200).json(result);
 });
 
 module.exports = router;

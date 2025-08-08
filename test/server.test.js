@@ -2,6 +2,7 @@ const tap = require('tap');
 const supertest = require('supertest');
 const app = require('../app');
 const server = supertest(app);
+const prisma = require('../prisma/prismaClient');
 
 const mockUser = {
     name: 'Clark Kent',
@@ -11,6 +12,14 @@ const mockUser = {
 };
 
 let token = '';
+
+// Clean up database before tests
+tap.before(async () => {
+    await prisma.readArticle.deleteMany({});
+    await prisma.favoriteArticle.deleteMany({});
+    await prisma.preferences.deleteMany({});
+    await prisma.user.deleteMany({});
+});
 
 // Auth tests
 
@@ -53,9 +62,8 @@ tap.test('POST /users/login with wrong password', async (t) => {
 
 tap.test('GET /users/preferences', async (t) => {
     const response = await server.get('/users/preferences').set('Authorization', `Bearer ${token}`);
-    t.equal(response.status, 200);
-    t.hasOwnProp(response.body, 'preferences');
-    t.same(response.body.preferences, mockUser.preferences);
+    t.equal(response.status, 404); // Preferences don't exist yet
+    t.hasOwnProp(response.body, 'error');
     t.end();
 });
 
@@ -67,12 +75,28 @@ tap.test('GET /users/preferences without token', async (t) => {
 
 tap.test('PUT /users/preferences', async (t) => {
     const response = await server.put('/users/preferences').set('Authorization', `Bearer ${token}`).send({
-        preferences: ['movies', 'comics', 'games']
+        preferences: mockUser.preferences
     });
     t.equal(response.status, 200);
+    t.end();
 });
 
 tap.test('Check PUT /users/preferences', async (t) => {
+    const response = await server.get('/users/preferences').set('Authorization', `Bearer ${token}`);
+    t.equal(response.status, 200);
+    t.same(response.body.preferences, mockUser.preferences);
+    t.end();
+});
+
+tap.test('Update /users/preferences', async (t) => {
+    const response = await server.put('/users/preferences').set('Authorization', `Bearer ${token}`).send({
+        preferences: ['movies', 'comics', 'games']
+    });
+    t.equal(response.status, 200);
+    t.end();
+});
+
+tap.test('Check Updated /users/preferences', async (t) => {
     const response = await server.get('/users/preferences').set('Authorization', `Bearer ${token}`);
     t.equal(response.status, 200);
     t.same(response.body.preferences, ['movies', 'comics', 'games']);

@@ -12,6 +12,9 @@ const createUser = async (name, email, password) => {
         });
         return user;
     } catch (err) {
+        if (err.code === 'P2002') {
+            throw new Error('Email already exists');
+        }
         throw new Error('Unable to create user');
     }
 };
@@ -77,7 +80,7 @@ const loginUser = async (email, password) => {
         return token;
     }
     catch (err) {
-        return err;
+        throw err; // Throw the error instead of returning it
     }
 }
 
